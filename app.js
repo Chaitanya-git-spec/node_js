@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-  res.send("hello from iccs  TYBBA-CA  🚀");
+  res.send("this is from iccs bca science 🚀");
 });
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

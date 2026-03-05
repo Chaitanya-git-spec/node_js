@@ -3,14 +3,15 @@ pipeline {
 
     environment {
         EC2_IP = "18.210.28.231"
+        EC2_USER = "ec2-user"
         APP_DIR = "/home/ec2-user/nodeapp"
     }
 
     stages {
 
-        stage('Clone Code') {
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/yourusername/nodejs-app.git'
+                git branch: 'main', url: 'https://github.com/Chaitanya-git-spec/node_js.git'
             }
         }
 
@@ -18,17 +19,22 @@ pipeline {
             steps {
                 sshagent(['ec2-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@$EC2_IP "mkdir -p $APP_DIR"
+                    
+                    # Create directory on EC2
+                    ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP "mkdir -p $APP_DIR"
 
-                    scp -o StrictHostKeyChecking=no -r * ec2-user@$EC2_IP:$APP_DIR
+                    # Copy project files
+                    scp -o StrictHostKeyChecking=no -r * $EC2_USER@$EC2_IP:$APP_DIR
 
-                    ssh -o StrictHostKeyChecking=no ec2-user@$EC2_IP "
+                    # Install NodeJS and run application
+                    ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP "
                         sudo yum install -y nodejs npm
                         cd $APP_DIR
                         npm install
                         sudo pkill node || true
                         sudo node app.js &
                     "
+
                     '''
                 }
             }

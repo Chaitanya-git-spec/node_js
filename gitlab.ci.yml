@@ -1,0 +1,35 @@
+stages:
+  - deploy
+
+deploy_node_app:
+  stage: deploy
+  image: alpine:latest
+
+  before_script:
+    - apk add --no-cache openssh-client rsync
+    - mkdir -p ~/.ssh
+
+    # Decode SSH key
+    - echo "$SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+
+    # Add server to known hosts
+    - ssh-keyscan -H 18.210.28.231 >> ~/.ssh/known_hosts
+
+  script:
+    - echo "Deploying NodeJS application"
+
+    # Copy application to EC2
+    - rsync -avz ./ ec2-user@18.210.28.231:/home/ec2-user/nodeapp
+
+    # Install dependencies and start app
+    - ssh ec2-user@18.210.28.231 "
+        sudo yum install -y nodejs npm &&
+        cd /home/ec2-user/nodeapp &&
+        npm install &&
+        sudo pkill node || true &&
+        sudo node app.js &
+      "
+
+  only:
+    - main

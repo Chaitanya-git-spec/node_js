@@ -16,25 +16,38 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm install'
-            }
-        }
-
         stage('Deploy to Azure VM') {
             steps {
                 sh """
-                sshpass -p ${VM_PASS} ssh -o StrictHostKeyChecking=no ${VM_USER}@${VM_IP} << EOF
+                sshpass -p '${VM_PASS}' ssh -o StrictHostKeyChecking=no ${VM_USER}@${VM_IP} << EOF
 
+                echo "Updating system packages"
+                sudo apt update -y
+
+                echo "Installing Git"
+                sudo apt install git -y
+
+                echo "Installing NodeJS"
+                curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+                sudo apt install nodejs -y
+
+                echo "Installing PM2 process manager"
+                sudo npm install -g pm2
+
+                echo "Cloning application if not present"
                 if [ ! -d nodeapp ]; then
                     git clone ${REPO_URL} nodeapp
                 fi
 
                 cd nodeapp
+
+                echo "Pulling latest code"
                 git pull origin main
+
+                echo "Installing application dependencies"
                 npm install
 
+                echo "Starting application"
                 pm2 restart nodeapp || pm2 start app.js --name nodeapp
 
                 EOF

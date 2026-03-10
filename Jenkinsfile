@@ -49,8 +49,7 @@ pipeline {
 
                 echo "Starting application"
                 pm2 restart nodeapp || pm2 start app.js --name nodeapp
-
-                EOF
+                
                 """
             }
         }

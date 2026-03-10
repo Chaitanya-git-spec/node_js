@@ -1,42 +1,46 @@
 pipeline {
-  agent any
-  stages {
-    stage('Checkout Code') {
-      steps {
-        git(branch: 'main', url: 'https://github.com/Chaitanya-git-spec/node_js.git')
-      }
+    agent any
+
+    environment {
+        REPO_URL = "https://github.com/Chaitanya-git-spec/node_js.git"
+        VM_IP = "20.62.118.233"
+        VM_USER = "chaitanya"
+        VM_PASS = "welcome@12345"
     }
 
-    stage('Deploy to EC2') {
-      steps {
-        sshagent(credentials: ['ccaccess']) {
-          sh '''
-                    
-                    # Create directory on EC2
-                    ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP "mkdir -p $APP_DIR"
+    stages {
 
-                    # Copy project files
-                    scp -o StrictHostKeyChecking=no -r * $EC2_USER@$EC2_IP:$APP_DIR
-
-                    # Install NodeJS and run application
-                    ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP "
-                        sudo yum install -y nodejs npm
-                        cd $APP_DIR
-                        npm install
-                        sudo pkill node || true
-                        sudo node app.js &
-                    "
-
-                    '''
+        stage('Clone Code') {
+            steps {
+                git branch: 'main', url: "${REPO_URL}"
+            }
         }
 
-      }
-    }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
 
-  }
-  environment {
-    EC2_IP = '18.210.28.231'
-    EC2_USER = 'ec2-user'
-    APP_DIR = '/home/ec2-user/nodeapp'
-  }
+        stage('Deploy to Azure VM') {
+            steps {
+                sh """
+                sshpass -p ${VM_PASS} ssh -o StrictHostKeyChecking=no ${VM_USER}@${VM_IP} << EOF
+
+                if [ ! -d nodeapp ]; then
+                    git clone ${REPO_URL} nodeapp
+                fi
+
+                cd nodeapp
+                git pull origin main
+                npm install
+
+                pm2 restart nodeapp || pm2 start app.js --name nodeapp
+
+                EOF
+                """
+            }
+        }
+
+    }
 }

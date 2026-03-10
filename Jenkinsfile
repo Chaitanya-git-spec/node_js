@@ -19,7 +19,7 @@ pipeline {
         stage('Deploy to Azure VM') {
             steps {
                 sh """
-                sshpass -p '${VM_PASS}' ssh -o StrictHostKeyChecking=no ${VM_USER}@${VM_IP} << EOF
+                sshpass -p '${VM_PASS}' ssh -o StrictHostKeyChecking=no ${VM_USER}@${VM_IP} 
 
                 echo "Updating system packages"
                 sudo apt update -y

@@ -19,8 +19,8 @@ pipeline {
         stage('Deploy to Azure VM') {
             steps {
                 sh """
-                sshpass -p '${VM_PASS}' ssh -o StrictHostKeyChecking=no ${VM_USER}@${VM_IP} 
-
+                sshpass -p '${VM_PASS}' ssh -o StrictHostKeyChecking=no ${VM_USER}@${VM_IP} '
+                
                 echo "Updating system packages"
                 sudo apt update -y
 
@@ -28,7 +28,7 @@ pipeline {
                 sudo apt install git -y
 
                 echo "Installing NodeJS"
-                curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+                curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
                 sudo apt install nodejs -y
 
                 echo "Installing PM2 process manager"
@@ -49,7 +49,8 @@ pipeline {
 
                 echo "Starting application"
                 pm2 restart nodeapp || pm2 start app.js --name nodeapp
-                
+
+                '
                 """
             }
         }

@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         REPO_URL = "https://github.com/Chaitanya-git-spec/node_js.git"
-        VM_IP = "20.62.118.233"
+        VM_IP = "23.102.118.6"
         VM_USER = "chaitanya"
         VM_PASS = "welcome@12345"
     }
